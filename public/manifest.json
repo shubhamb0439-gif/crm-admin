@@ -1,0 +1,24 @@
+{
+  "name": "Healthcare CRM Admin Panel",
+  "short_name": "Healthcare CRM",
+  "description": "Healthcare CRM Admin Panel - Manage leads, bookings, and assessments",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#531B93",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/og logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon logo apple.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "apple-touch-icon"
+    }
+  ]
+}
