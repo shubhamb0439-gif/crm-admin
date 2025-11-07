@@ -45,110 +45,113 @@ export function LeadsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Lead Database</h1>
-          <p className="text-slate-600 mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Lead Database</h1>
+          <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">
             {filteredLeads?.length || 0} of {leads?.length || 0} leads
           </p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center space-x-2 bg-brand-teal text-white px-6 py-3 rounded-lg hover:bg-brand-teal transition-colors font-medium"
+          className="flex items-center justify-center space-x-2 bg-brand-teal text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg hover:bg-brand-teal transition-colors font-medium w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" />
           <span>Add Lead</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <div className="space-y-4">
+      <div className="bg-white rounded-xl border border-slate-200 p-3 md:p-4">
+        <div className="space-y-3 md:space-y-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 md:w-5 h-4 md:h-5 text-slate-400" />
             <input
               type="text"
               placeholder="Search by name, email, or facility..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-teal"
+              className="w-full pl-10 md:pl-11 pr-4 py-2.5 md:py-3 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-teal text-sm md:text-base"
             />
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <div className="flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-slate-600" />
-              <span className="text-sm font-medium text-slate-700">Filters:</span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Filter className="w-4 h-4 text-slate-600" />
+                <span className="text-sm font-medium text-slate-700">Filters:</span>
+                {activeFilters > 0 && (
+                  <span className="text-xs bg-brand-teal/10 text-brand-teal px-2 py-1 rounded-full">
+                    {activeFilters} active
+                  </span>
+                )}
+              </div>
               {activeFilters > 0 && (
-                <span className="text-xs bg-brand-teal/10 text-brand-teal px-2 py-1 rounded-full">
-                  {activeFilters} active
-                </span>
+                <button
+                  onClick={() => {
+                    setSourceFilter('');
+                    setStatusFilter('');
+                    setEfficiencyFilter('');
+                  }}
+                  className="flex items-center space-x-1 text-sm text-slate-600 hover:text-slate-900"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Clear</span>
+                </button>
               )}
             </div>
 
-            <select
-              value={sourceFilter}
-              onChange={(e) => setSourceFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal"
-            >
-              <option value="">All Sources</option>
-              <option value="Assessment">Assessment</option>
-              <option value="Consultancy">Consultancy</option>
-              <option value="Referral">Referral</option>
-              <option value="LinkedIn">LinkedIn</option>
-              <option value="WhatsApp">WhatsApp</option>
-              <option value="Call">Call</option>
-              <option value="Email">Email</option>
-            </select>
-
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal"
-            >
-              <option value="">All Statuses</option>
-              <option value="New">New</option>
-              <option value="Contacted">Contacted</option>
-              <option value="Qualified Prospect">Qualified Prospect</option>
-              <option value="Contract Sent">Contract Sent</option>
-              <option value="Confirmed Client">Confirmed Client</option>
-              <option value="Closed">Closed</option>
-            </select>
-
-            <select
-              value={efficiencyFilter}
-              onChange={(e) => setEfficiencyFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal"
-            >
-              <option value="">All Efficiency Levels</option>
-              <option value="Good Efficiency">Good Efficiency</option>
-              <option value="Moderate Efficiency">Moderate Efficiency</option>
-              <option value="Needs Improvement">Needs Improvement</option>
-            </select>
-
-            {activeFilters > 0 && (
-              <button
-                onClick={() => {
-                  setSourceFilter('');
-                  setStatusFilter('');
-                  setEfficiencyFilter('');
-                }}
-                className="flex items-center space-x-1 text-sm text-slate-600 hover:text-slate-900"
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <select
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value)}
+                className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal"
               >
-                <X className="w-4 h-4" />
-                <span>Clear</span>
-              </button>
-            )}
+                <option value="">All Sources</option>
+                <option value="Assessment">Assessment</option>
+                <option value="Consultancy">Consultancy</option>
+                <option value="Referral">Referral</option>
+                <option value="LinkedIn">LinkedIn</option>
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="Call">Call</option>
+                <option value="Email">Email</option>
+              </select>
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal"
+              >
+                <option value="">All Statuses</option>
+                <option value="New">New</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Qualified Prospect">Qualified Prospect</option>
+                <option value="Contract Sent">Contract Sent</option>
+                <option value="Confirmed Client">Confirmed Client</option>
+                <option value="Closed">Closed</option>
+              </select>
+
+              <select
+                value={efficiencyFilter}
+                onChange={(e) => setEfficiencyFilter(e.target.value)}
+                className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal sm:col-span-2 lg:col-span-1"
+              >
+                <option value="">All Efficiency Levels</option>
+                <option value="Good Efficiency">Good Efficiency</option>
+                <option value="Moderate Efficiency">Moderate Efficiency</option>
+                <option value="Needs Improvement">Needs Improvement</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-600">Loading leads...</div>
+          <div className="p-6 md:p-8 text-center text-slate-600">Loading leads...</div>
         ) : filteredLeads && filteredLeads.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[1200px]">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
@@ -268,7 +271,7 @@ export function LeadsPage() {
             </table>
           </div>
         ) : (
-          <div className="p-8 text-center text-slate-600">No leads found</div>
+          <div className="p-6 md:p-8 text-center text-slate-600">No leads found</div>
         )}
       </div>
 
