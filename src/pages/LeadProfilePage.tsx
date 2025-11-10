@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useLead, useLeadAssessment, useLeadBooking } from '../hooks/useRealtimeData';
+import { useLead, useLeadAssessment, useLeadBooking, useServices } from '../hooks/useRealtimeData';
 import { supabase } from '../lib/supabase';
 import {
   ArrowLeft,
@@ -12,6 +12,10 @@ import {
   FileText,
   Award,
   Trash2,
+  DollarSign,
+  Package,
+  Edit2,
+  RotateCcw,
 } from 'lucide-react';
 
 export function LeadProfilePage() {
@@ -20,8 +24,20 @@ export function LeadProfilePage() {
   const { data: lead, isLoading } = useLead(id!);
   const { data: assessment } = useLeadAssessment(lead?.email || '');
   const { data: booking } = useLeadBooking(lead?.email || '');
+  const { data: services } = useServices();
   const [notes, setNotes] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isEditingValue, setIsEditingValue] = useState(false);
+  const [valueInput, setValueInput] = useState('');
+  const [isEditingServices, setIsEditingServices] = useState(false);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (lead) {
+      setValueInput(lead.value_per_annum?.toString() || '');
+      setSelectedServices(lead.selected_services || []);
+    }
+  }, [lead]);
 
   if (isLoading) {
     return (
@@ -50,7 +66,7 @@ export function LeadProfilePage() {
       const updates: any = { status: newStatus, updated_at: new Date().toISOString() };
 
       if (newStatus === 'Closed') {
-        updates.closed_reason = 'Closed';
+        updates.closed_reason = 'Not Interested';
       }
 
       const { error } = await supabase
@@ -99,6 +115,70 @@ export function LeadProfilePage() {
       alert('Failed to delete lead');
     }
   };
+
+  const handleValueUpdate = async () => {
+    try {
+      const value = parseFloat(valueInput) || null;
+      const { error } = await supabase
+        .from('leads')
+        .update({ value_per_annum: value, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) throw error;
+      setIsEditingValue(false);
+    } catch (error) {
+      console.error('Error updating value:', error);
+      alert('Failed to update value');
+    }
+  };
+
+  const handleServicesUpdate = async () => {
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .update({
+          selected_services: selectedServices,
+          product_service: selectedServices.join(', '),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      setIsEditingServices(false);
+    } catch (error) {
+      console.error('Error updating services:', error);
+      alert('Failed to update services');
+    }
+  };
+
+  const handleReopenLead = async () => {
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .update({
+          status: 'Contacted',
+          closed_reason: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error reopening lead:', error);
+      alert('Failed to reopen lead');
+    }
+  };
+
+  const toggleService = (serviceName: string) => {
+    setSelectedServices((prev) =>
+      prev.includes(serviceName)
+        ? prev.filter((s) => s !== serviceName)
+        : [...prev, serviceName]
+    );
+  };
+
+  const serviceCategories = services?.filter((s) => s.category === 'Service' && s.is_visible) || [];
+  const innovationCategories = services?.filter((s) => s.category === 'Innovation' && s.is_visible) || [];
 
   const statuses = ['New', 'Contacted', 'Qualified Prospect', 'Contract Sent', 'Confirmed Client', 'Closed'];
 
@@ -176,9 +256,9 @@ export function LeadProfilePage() {
               <div className="flex items-start space-x-3">
                 <Calendar className="w-5 h-5 text-slate-400 mt-0.5" />
                 <div>
-                  <p className="text-sm text-slate-600">Created</p>
+                  <p className="text-sm text-slate-600">Contact Date</p>
                   <p className="text-sm font-medium text-slate-900">
-                    {new Date(lead.created_at).toLocaleDateString()}
+                    {lead.contact_date ? new Date(lead.contact_date).toLocaleDateString() : new Date(lead.created_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -193,6 +273,146 @@ export function LeadProfilePage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="w-5 h-5 text-slate-700" />
+                <h2 className="text-lg font-semibold text-slate-900">Value Per Annum</h2>
+              </div>
+              {!isEditingValue && (
+                <button
+                  onClick={() => setIsEditingValue(true)}
+                  className="text-brand-teal hover:text-teal-700 p-1"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            {isEditingValue ? (
+              <div className="space-y-3">
+                <input
+                  type="number"
+                  value={valueInput}
+                  onChange={(e) => setValueInput(e.target.value)}
+                  placeholder="Enter annual value"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-teal"
+                />
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handleValueUpdate}
+                    className="px-4 py-2 bg-brand-teal text-white rounded-lg hover:bg-brand-teal transition-colors"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingValue(false);
+                      setValueInput(lead.value_per_annum?.toString() || '');
+                    }}
+                    className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-2xl font-bold text-slate-900">
+                {lead.value_per_annum ? `$${lead.value_per_annum.toLocaleString()}` : 'Not set'}
+              </p>
+            )}
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Package className="w-5 h-5 text-slate-700" />
+                <h2 className="text-lg font-semibold text-slate-900">Products & Services</h2>
+              </div>
+              {!isEditingServices && (
+                <button
+                  onClick={() => setIsEditingServices(true)}
+                  className="text-brand-teal hover:text-teal-700 p-1"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            {isEditingServices ? (
+              <div className="space-y-3">
+                <div className="border border-slate-300 rounded-lg p-4 max-h-60 overflow-y-auto">
+                  {serviceCategories.length > 0 && (
+                    <div className="space-y-2 mb-4">
+                      <p className="text-sm font-semibold text-slate-900">Services</p>
+                      {serviceCategories.map((service) => (
+                        <label
+                          key={service.id}
+                          className="flex items-center space-x-3 p-2 hover:bg-slate-50 rounded cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedServices.includes(service.name)}
+                            onChange={() => toggleService(service.name)}
+                            className="w-4 h-4 text-brand-teal border-slate-300 rounded focus:ring-brand-teal"
+                          />
+                          <span className="text-sm text-slate-700">{service.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {innovationCategories.length > 0 && (
+                    <div className="space-y-2 pt-4 border-t border-slate-200">
+                      <p className="text-sm font-semibold text-slate-900">Products & Innovation</p>
+                      {innovationCategories.map((service) => (
+                        <label
+                          key={service.id}
+                          className="flex items-center space-x-3 p-2 hover:bg-slate-50 rounded cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedServices.includes(service.name)}
+                            onChange={() => toggleService(service.name)}
+                            className="w-4 h-4 text-brand-teal border-slate-300 rounded focus:ring-brand-teal"
+                          />
+                          <span className="text-sm text-slate-700">{service.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handleServicesUpdate}
+                    className="px-4 py-2 bg-brand-teal text-white rounded-lg hover:bg-brand-teal transition-colors"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingServices(false);
+                      setSelectedServices(lead.selected_services || []);
+                    }}
+                    className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {lead.selected_services && lead.selected_services.length > 0 ? (
+                  lead.selected_services.map((service, i) => (
+                    <div key={i} className="inline-flex items-center px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-sm mr-2 mb-2">
+                      {service}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-slate-500">No services selected</p>
+                )}
+              </div>
+            )}
           </div>
 
           {assessment && lead.source === 'Assessment' && (
@@ -351,16 +571,25 @@ export function LeadProfilePage() {
             </div>
           </div>
 
-          {lead.closed_reason && (
+          {lead.status === 'Closed' && (
             <div className="bg-white rounded-xl border border-slate-200 p-6">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Closure Details</h2>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-slate-600">Reason</p>
-                  <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700">
-                    {lead.closed_reason}
-                  </span>
-                </div>
+              <div className="space-y-4">
+                {lead.closed_reason && (
+                  <div>
+                    <p className="text-sm text-slate-600">Reason</p>
+                    <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700">
+                      {lead.closed_reason}
+                    </span>
+                  </div>
+                )}
+                <button
+                  onClick={handleReopenLead}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-brand-teal text-white rounded-lg hover:bg-brand-teal transition-colors font-medium"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Reopen Lead</span>
+                </button>
               </div>
             </div>
           )}

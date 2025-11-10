@@ -224,7 +224,11 @@ export function LeadsPage() {
                       <div className="text-sm text-slate-600">{lead.added_by || 'System'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-slate-600">{lead.product_service || '-'}</div>
+                      <div className="text-sm text-slate-600">
+                        {lead.selected_services && lead.selected_services.length > 1
+                          ? 'Multiple'
+                          : lead.product_service || '-'}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-slate-900">{lead.score || '-'}</div>
@@ -291,6 +295,7 @@ function AddLeadModal({ onClose }: { onClose: () => void }) {
     country: '',
     state: '',
     source: '',
+    contactDate: new Date().toISOString().split('T')[0],
   });
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -333,6 +338,7 @@ function AddLeadModal({ onClose }: { onClose: () => void }) {
         product_service: selectedServices.join(', '),
         selected_services: selectedServices,
         status: 'New',
+        contact_date: formData.contactDate ? new Date(formData.contactDate).toISOString() : new Date().toISOString(),
         added_by: session?.name || session?.email?.split('@')[0] || 'Admin',
         added_by_email: session?.email,
       });
@@ -378,26 +384,41 @@ function AddLeadModal({ onClose }: { onClose: () => void }) {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Email <span className="text-red-500">*</span>
+                Email / LinkedIn ID <span className="text-red-500">*</span>
               </label>
               <input
-                type="email"
+                type="text"
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="email@example.com or linkedin.com/in/username"
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-teal"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-teal"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-teal"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Contact Date
+              </label>
+              <input
+                type="date"
+                value={formData.contactDate}
+                onChange={(e) => setFormData({ ...formData, contactDate: e.target.value })}
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-teal"
+              />
+            </div>
           </div>
 
           <div>

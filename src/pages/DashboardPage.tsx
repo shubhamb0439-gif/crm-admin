@@ -1,5 +1,5 @@
 import { useLeads } from '../hooks/useRealtimeData';
-import { TrendingUp, Users, CheckCircle, Target, PieChart, AlertTriangle } from 'lucide-react';
+import { TrendingUp, Users, CheckCircle, Target, PieChart, AlertTriangle, Package } from 'lucide-react';
 
 export function DashboardPage() {
   const { data: leads, isLoading } = useLeads();
@@ -52,6 +52,20 @@ export function DashboardPage() {
     }, {} as Record<string, number>);
 
   const topChallenges = Object.entries(challengeKeywords || {})
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10);
+
+  const servicesBreakdown = leads?.reduce((acc, lead) => {
+    if (lead.selected_services && Array.isArray(lead.selected_services)) {
+      lead.selected_services.forEach((service) => {
+        acc[service] = (acc[service] || 0) + 1;
+      });
+    }
+    return acc;
+  }, {} as Record<string, number>) || {};
+
+  const totalServicesCount = Object.values(servicesBreakdown).reduce((a, b) => a + b, 0);
+  const topServices = Object.entries(servicesBreakdown)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 10);
 
@@ -185,6 +199,38 @@ export function DashboardPage() {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl p-6 border border-slate-200">
+        <div className="flex items-center space-x-2 mb-6">
+          <Package className="w-5 h-5 text-slate-700" />
+          <h2 className="text-lg font-semibold text-slate-900">Products & Services Insights</h2>
+        </div>
+        <div className="space-y-4">
+          {topServices.length > 0 ? (
+            topServices.map(([service, count]) => {
+              const percentage = totalServicesCount > 0 ? ((count / totalServicesCount) * 100).toFixed(1) : 0;
+              return (
+                <div key={service}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-slate-700">{service}</span>
+                    <span className="text-sm text-slate-600">
+                      {count} ({percentage}%)
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2">
+                    <div
+                      className="bg-brand-teal h-2 rounded-full transition-all"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-sm text-slate-500">No services data available</p>
+          )}
         </div>
       </div>
 
